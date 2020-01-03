@@ -57,3 +57,39 @@ finally {
 	    Move-Item "$($_.FullName)" "$($baseFolder)/$($date.ToString('yyyy'))/$($_.Name)" -Force -Confirm:$false 
 	    Write-Host "$($date.ToString('yyyy')) (TD)" -ForegroundColor cyan
     }
+
+
+
+ gci -Directory "$basefolder\*"  | % {
+            $newBaseFolder = $_
+
+            gci  -File "$_\*" | where-object { $_.FullName.Substring($_.FullName.Length-3,3).ToUpper() -in "MP4","MP3","JPG","PEG","3GP"} | % {
+                        
+
+	                    Write-Host "$_ ->`t" -ForegroundColor Cyan -NoNewLine 
+                        
+	                    try {
+                             $date = (exif-date $_.FullName)
+                             
+                        } catch {}
+
+	                    if ($date -eq $null -or $_.FullName.Substring($_.FullName.Length-3,3).ToUpper() -notin "JPG","PEG") {
+                            if((Test-Path "$($newBasefolder)\$($_.LastWriteTime.ToString('MM'))") -eq $false) {
+                               New-Item "$($newBasefolder)\$($_.LastWriteTime.ToString('MM'))" -ItemType directory
+                               Write-Host "Create Folder $($newBasefolder)\$($_.LastWriteTime.ToString('MM'))"
+                            }
+		                    Move-Item "$($_.FullName)" "$($newBasefolder)/$($_.LastWriteTime.ToString('MM'))/$($_.Name)" -Force -Confirm:$false
+                            Write-Host "$($_.LastWriteTime.ToString('MM')) (WD)" -ForegroundColor cyan
+		                    return
+	                    }
+        
+                if((Test-Path "$($newBasefolder)\$($date.ToString('MM'))") -eq $false) {
+                    New-Item -Path "$($newBasefolder)\$($date.ToString('MM'))" -ItemType directory
+            
+                    Write-Host "Create Folder $($newBasefolder)\$($date.ToString('MM'))" 
+                }
+	            Move-Item "$($_.FullName)" "$($newBasefolder)/$($date.ToString('MM'))/$($_.Name)" -Force -Confirm:$false
+	            Write-Host "$($date.ToString('MM')) (TD)" -ForegroundColor cyan
+            }
+
+    }
